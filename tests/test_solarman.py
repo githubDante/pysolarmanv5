@@ -2,6 +2,7 @@ import time
 import logging
 from setup_test import SolarmanServer, AioSolarmanServer
 from pysolarmanv5 import PySolarmanV5, NoSocketAvailableError
+import pytest
 
 log = logging.getLogger()
 # server = SolarmanServer('127.0.0.1', 8899)
@@ -32,4 +33,8 @@ def test_sync():
     log.debug(f"[Sync-INPUT] Logger response: {res}")
     assert len(res) == 10
     solarman.disconnect()
+    time.sleep(0.6)
+    assert solarman._reader_thr.is_alive() is False
+    with pytest.raises(NoSocketAvailableError):
+        solarman.read_input_registers(40, 10)
     log.debug("[Sync] Disconnected!!!")

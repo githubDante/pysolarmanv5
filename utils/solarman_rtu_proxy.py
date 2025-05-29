@@ -43,6 +43,7 @@ async def _solarman_connect():
     global __connected__
     if not __connected__:
         await __solarman__.connect()
+        __connected__ = True
 
 
 async def handle_client(

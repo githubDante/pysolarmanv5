@@ -66,10 +66,12 @@ async def handle_client(
             try:
                 __slock__.acquire(blocking=True)
                 reply = await __solarman__.send_raw_modbus_frame(bytearray(modbus_request))
-                __slock__.release()
                 writer.write(reply)
             except:
                 pass
+            finally:
+                __slock__.release()
+
 
         await writer.drain()
     except OSError:

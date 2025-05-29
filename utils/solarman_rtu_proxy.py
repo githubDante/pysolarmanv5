@@ -16,8 +16,33 @@ Can be used with Home Assistant's native Modbus integration using config below:
 import argparse
 import asyncio
 from functools import partial
+from typing import Optional
 
 from pysolarmanv5 import PySolarmanV5Async
+from threading import Lock
+
+__solarman__: Optional[PySolarmanV5Async] = None
+__slock__: Lock = Lock()
+__connected__ = False
+
+
+def _solarman_init(address: str, serial: int):
+    global __solarman__
+    if __solarman__ is None:
+        __solarman__ = PySolarmanV5Async(address, serial, verbose=True, auto_reconnect=True)
+
+async def _solarman_disconnect():
+    global __solarman__
+    global __connected__
+    if __connected__:
+        __connected__ = False
+        await __solarman__.disconnect()
+
+async def _solarman_connect():
+    global __solarman__
+    global __connected__
+    if not __connected__:
+        await __solarman__.connect()
 
 
 async def handle_client(
@@ -26,14 +51,12 @@ async def handle_client(
     logger_address: str,
     logger_serial: int,
 ):
-    solarmanv5 = PySolarmanV5Async(
-        logger_address, logger_serial, verbose=True, auto_reconnect=True
-    )
-    await solarmanv5.connect()
 
+    global __solarman__
+    global __slock__
     addr = writer.get_extra_info("peername")
-
     print(f"{addr}: New connection")
+    _solarman_init(logger_address, logger_serial)
 
     try:
         while True:
@@ -41,7 +64,9 @@ async def handle_client(
             if not modbus_request:
                 break
             try:
-                reply = await solarmanv5.send_raw_modbus_frame(modbus_request)
+                __slock__.acquire(blocking=True)
+                reply = await __solarman__.send_raw_modbus_frame(bytearray(modbus_request))
+                __slock__.release()
                 writer.write(reply)
             except:
                 pass
@@ -52,7 +77,8 @@ async def handle_client(
         pass
 
     print(f"{addr}: Connection closed")
-    await solarmanv5.disconnect()
+    # await solarmanv5.disconnect()  # Should we disconnect the server from the logger at all ?!?
+    # await _solarman_disconnect()  # If so uncomment this one
 
 
 async def run_proxy(

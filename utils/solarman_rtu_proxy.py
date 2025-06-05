@@ -42,8 +42,11 @@ async def _solarman_connect():
     global __solarman__
     global __connected__
     if not __connected__:
-        await __solarman__.connect()
-        __connected__ = True
+        try:
+            await __solarman__.connect()
+            __connected__ = True
+        except Exception as e:
+            print(f"Cannot connect to logger: {e}")
 
 
 async def handle_client(
@@ -55,9 +58,18 @@ async def handle_client(
 
     global __solarman__
     global __slock__
+    global __connected__
+
     addr = writer.get_extra_info("peername")
     print(f"{addr}: New connection")
     _solarman_init(logger_address, logger_serial)
+    await _solarman_connect()
+
+    if not __connected__:
+        print("logger unavailable")
+        writer.close()
+        return
+
 
     try:
         while True:
@@ -68,6 +80,7 @@ async def handle_client(
                 __slock__.acquire(blocking=True)
                 reply = await __solarman__.send_raw_modbus_frame(bytearray(modbus_request))
                 writer.write(reply)
+                await writer.drain()
             except:
                 pass
             finally:

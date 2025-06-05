@@ -41,7 +41,9 @@ async def _solarman_disconnect():
 async def _solarman_connect():
     global __solarman__
     global __connected__
-    if not __connected__:
+    if not __connected__ or __solarman__.reader_task is None:
+        if __solarman__.reader_task is None and __connected__:
+            print("Not connected to a logger! Forced reconnect...")
         try:
             await __solarman__.connect()
             __connected__ = True

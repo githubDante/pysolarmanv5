@@ -29,7 +29,7 @@ __connected__ = False
 def _solarman_init(address: str, serial: int):
     global __solarman__
     if __solarman__ is None:
-        __solarman__ = PySolarmanV5Async(address, serial, verbose=True, auto_reconnect=True)
+        __solarman__ = PySolarmanV5Async(address, serial, verbose=True, auto_reconnect=True, socket_timeout=3)
 
 async def _solarman_disconnect():
     global __solarman__
@@ -83,13 +83,12 @@ async def handle_client(
                 reply = await __solarman__.send_raw_modbus_frame(bytearray(modbus_request))
                 writer.write(reply)
                 await writer.drain()
-            except:
-                pass
+            except Exception as e:
+                print(f'Proxy read error: {e}')
+                writer.write(b'')
+                await writer.drain()
             finally:
                 __slock__.release()
-
-
-        await writer.drain()
     except OSError:
         # https://github.com/python/cpython/issues/83037
         pass

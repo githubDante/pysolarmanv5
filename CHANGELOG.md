@@ -1,5 +1,23 @@
 # Changelog
 
+## [master]
+
+### Added
+ 
+- New discovery tools implemented with asyncio __@davidrapan__ [GH PR #94](https://github.com/jmccrohan/pysolarmanv5/pull/94)
+- Docker image + CI configuration __@ngehrsitz__ [GH PR #89](https://github.com/jmccrohan/pysolarmanv5/pull/88)
+- Standalone RTU proxy + CLI commands __@ngehrsitz__ [GH PR #88](https://github.com/jmccrohan/pysolarmanv5/pull/88)
+- Microinverter cloudless time synchronisation __@davidrapan__ [GH PR #82](https://github.com/jmccrohan/pysolarmanv5/pull/82)
+
+### Changed 
+
+- Disconnect mechanism in PySolarmanV5Async __@davidrapan__ [GH PR #83](https://github.com/jmccrohan/pysolarmanv5/pull/83) 
+
+### Fixed
+
+- [Async] Raise NoSocketAvailableError much faster when the auto reconnect is disabled   
+
+
 ## [v3.0.6] - 2024-12-11
 
 ### Changed
